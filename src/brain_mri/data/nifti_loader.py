@@ -31,9 +31,17 @@ def find_patient_files(patient_dir : Path) -> dict:
     return patient_files
 
 def load_patient(patient_dir: Path) -> tuple[np.ndarray, np.ndarray]:
+    if not patient_dir.is_dir():
+        raise FileNotFoundError(f"Invalid patient directory: {patient_dir}")
+    
     patient_files = find_patient_files(patient_dir)
-    modalities = []
+    required_files = set(MRI_MODALITIES + ["SEG"])
+    missing_files = required_files - set(patient_files.keys())
 
+    if missing_files:
+        raise ValueError(f"Missing required files for patient: {missing_files}")
+
+    modalities = []
     for modality in MRI_MODALITIES:
         volume = nib.load(patient_files[modality]).get_fdata(dtype=np.float32)
         volume = z_score_normalise(volume)
@@ -41,6 +49,11 @@ def load_patient(patient_dir: Path) -> tuple[np.ndarray, np.ndarray]:
 
     segmentation = nib.load(patient_files["SEG"]).get_fdata(dtype=np.float32)
     segmentation = segmentation.astype(np.int16)
-    return np.stack(modalities, axis=0), segmentation
+
+    images = np.stack(modalities, axis=0)
+    if images.shape[1:] != segmentation.shape:
+        raise ValueError(f"Image and segmentation shapes do not match: {images.shape[1:]} vs {segmentation.shape}")
+    
+    return images, segmentation
 
 
