@@ -39,7 +39,8 @@ def load_patient(patient_dir: Path) -> tuple[np.ndarray, np.ndarray]:
         volume = z_score_normalise(volume)
         modalities.append(volume)
 
-    segmentation = nib.load(patient_files["SEG"]).get_fdata(dtype=np.int16)
+    segmentation = nib.load(patient_files["SEG"]).get_fdata(dtype=np.float32)
+    segmentation = segmentation.astype(np.int16)
     return np.stack(modalities, axis=0), segmentation
 
 
