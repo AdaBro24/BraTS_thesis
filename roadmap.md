@@ -25,10 +25,10 @@
 
 ## Etap 2 — Preprocessing i etykietowanie (1 tydz.)
 
-- [ ] Decyzja: klasyfikacja 2D (slice'y) czy 3D (cały wolumen) — z uzasadnieniem
-- [ ] Normalizacja intensywności (z-score / percentile clipping)
+- [X] Decyzja: klasyfikacja 2D (slice'y) czy 3D (cały wolumen) — z uzasadnieniem
+- [X] Normalizacja intensywności (z-score / percentile clipping)
 - [ ] Podział train/val/test stratyfikowany per pacjent
-- [ ] Zapis podziału do `data_splits.json`
+- [X] Zapis podziału do `data_splits.json`
 
 ## Etap 3 — Moduł konwersji do HDF5 (1–1.5 tyg.)
 

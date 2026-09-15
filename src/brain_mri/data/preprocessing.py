@@ -11,4 +11,5 @@ def z_score_normalise(volume: np.ndarray, epsilon: float = 1e-8) -> np.ndarray:
 
     return normalised
 
- 
+def cut3d(x: int, y: int):
+    pass
