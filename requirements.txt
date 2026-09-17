@@ -1,0 +1,16 @@
+# --- Podstawowe obliczenia i dane ---
+numpy
+nibabel
+h5py
+PyYAML
+
+# --- Uczenie Maszynowe i Sieci Neuronowe ---
+torch
+scikit-learn
+
+# --- Wizualizacja ---
+matplotlib
+
+# --- Narzędzia deweloperskie (Czysty kod) ---
+black
+ruff
