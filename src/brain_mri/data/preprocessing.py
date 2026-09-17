@@ -21,6 +21,7 @@ def z_score_normalise(volume: np.ndarray, epsilon: float = 1e-8) -> np.ndarray:
 
     return normalised
 
+# Not sure if i need that
 def clip_percentiles(volume: np.ndarray, low: float = 1.0, high: float = 99.0) -> np.ndarray:
     mask = volume > 0
 
@@ -31,11 +32,11 @@ def clip_percentiles(volume: np.ndarray, low: float = 1.0, high: float = 99.0) -
 
     clipped = volume.copy()
     clipped[mask] = np.clip(volume[mask], lower, upper)
-    
+
     return np.clip(volume, lower, upper).astype(np.float32) 
 
 def cut_volume(volume: np.ndarray, lower_idx: int, greater_idx: int) -> np.ndarray: 
-    return volume[..., lower_idx:greater_idx + 1]
+    return volume[..., lower_idx : greater_idx + 1]
 
 def get_slice(volume: np.ndarray, z_idx: int):
     return volume[..., z_idx]
