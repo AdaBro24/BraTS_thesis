@@ -63,6 +63,7 @@ def extract_patient_slices(patient_dir: Path,
 
         if result is None:
             continue
+        
         image_slice, mask_slice = result
         extracted_slices.append(
             {
