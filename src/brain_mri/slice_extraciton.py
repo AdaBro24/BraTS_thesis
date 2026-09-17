@@ -28,27 +28,27 @@ def process_single_slice(
     return image_slice.astype(np.float32), mask_slice.astype(np.int16)
 
 
-def get_slice_indices(patient_id: str, boundaries: dict[str, list[int]]) -> range[int]:
+def get_slice_indices(patient_id: str, boundaries: dict[str, list[int]]) -> range:
     if patient_id not in boundaries:
         raise KeyError(f"Missing Z boundaries for {patient_id}")
 
     first_z, last_z = boundaries[patient_id]
     if first_z > last_z:
         raise ValueError(f"Invalid boundaries for {patient_id}, {first_z} > {last_z}")
-    return range([first_z, last_z + 1])
+    return range(first_z, last_z + 1)
 
 def _load_z_boundaries(json_file: Path) -> dict[str, list[int]]:
-    with open(json_file, "r", encoding="uft-8") as file:
+    with open(json_file, "r", encoding="utf-8") as file:
         return json.load(file)
 
-def extract_patient_slices(patient_dir: str, 
+def extract_patient_slices(patient_dir: Path, 
                            boundaries_path: Path,
                            target_size: tuple[int,int] = (224,224)
-                           ) -> list[dict[str, np.ndarray]]:
+                           ) -> list[dict]:
     patient_id = patient_dir.name
     boundaries = _load_z_boundaries(boundaries_path)
 
-    images, segmentation = load_patient(patient_id)
+    images, segmentation = load_patient(patient_dir)
     slice_indices = get_slice_indices(patient_id, boundaries)
 
     extracted_slices = []
