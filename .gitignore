@@ -1,3 +1,5 @@
 roadmap.html
-requirements.txt
 roadmap.md
+__pycache__/
+*.pyc
+*.egg-info/
