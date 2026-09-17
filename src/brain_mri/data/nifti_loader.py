@@ -1,8 +1,8 @@
 from pathlib import Path
-import nibabel as nib
 import numpy as np
+import nibabel as nib
 
-from brain_mri.data.preprocessing import z_score_normalise
+from brain_mri.data.preprocessing import z_score_normalise, clip_percentiles
 
 MRI_MODALITIES = ["T1", "T1CE", "T2", "FLAIR"]
 
@@ -44,6 +44,7 @@ def load_patient(patient_dir: Path) -> tuple[np.ndarray, np.ndarray]:
     modalities = []
     for modality in MRI_MODALITIES:
         volume = nib.load(patient_files[modality]).get_fdata(dtype=np.float32)
+        volume = clip_percentiles(volume)
         volume = z_score_normalise(volume)
         modalities.append(volume)
 
