@@ -25,6 +25,9 @@ def process_single_slice(
     if not validate_slice(image_slice, mask_slice):
         return None
 
+    brain_mask = (image_slice != 0).any(axis=0).astype(np.float32)
+    image_slice = np.append(image_slice, [brain_mask], axis=0)
+
     return image_slice.astype(np.float32), mask_slice.astype(np.int16)
 
 
