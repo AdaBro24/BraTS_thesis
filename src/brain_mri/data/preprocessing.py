@@ -76,7 +76,7 @@ def crop_or_pad_slice(slice2d: np.ndarray, target_size=(224, 224)):
         constant_values=0
     )
 
-def validate_slice(slice2d: np.ndarray, mask_slice: np.ndarray, expected_modalities: int = 4) -> bool:
+def validate_slice(slice2d: np.ndarray, mask_slice: np.ndarray, expected_modalities: int) -> bool:
     if slice2d.ndim != 3:
         return False
 

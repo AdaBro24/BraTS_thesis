@@ -1,8 +1,9 @@
 from pathlib import Path
-import numpy as np
-import nibabel as nib
 
-from brain_mri.data.preprocessing import z_score_normalise, clip_percentiles
+import nibabel as nib
+import numpy as np
+
+from brain_mri.data.preprocessing import clip_percentiles, z_score_normalise
 
 MRI_MODALITIES = ["T1", "T1CE", "T2", "FLAIR"]
 
@@ -42,8 +43,13 @@ def load_patient(patient_dir: Path) -> tuple[np.ndarray, np.ndarray]:
         raise ValueError(f"Missing required files for patient: {missing_files}")
 
     modalities = []
+    brain = None
     for modality in MRI_MODALITIES:
         volume = nib.load(patient_files[modality]).get_fdata(dtype=np.float32)
+
+        tissue_mask = (volume > 0).astype(np.uint8)
+        brain = tissue_mask if brain is None else brain | tissue_mask
+
         volume = clip_percentiles(volume)
         volume = z_score_normalise(volume)
         modalities.append(volume)
@@ -54,7 +60,7 @@ def load_patient(patient_dir: Path) -> tuple[np.ndarray, np.ndarray]:
     images = np.stack(modalities, axis=0)
     if images.shape[1:] != segmentation.shape:
         raise ValueError(f"Image and segmentation shapes do not match: {images.shape[1:]} vs {segmentation.shape}")
-    
-    return images, segmentation
+
+    return images, segmentation, brain
 
 

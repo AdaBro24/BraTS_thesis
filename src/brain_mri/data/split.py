@@ -38,7 +38,7 @@ def get_or_create_splits(folder_path : Path = GLI_ROOT, json_path : str = "/cont
         patient_dirs = [p for p in folder_path.iterdir() if p.is_dir()]
         train_patients, val_patients, test_patients = split_patients(patient_dirs)
         splitted["train"] = [p.name for p in train_patients]
-        splitted["validate"] = [p.name for p in val_patients]
+        splitted["val"] = [p.name for p in val_patients]
         splitted["test"] = [p.name for p in test_patients]
 
         if json_path:

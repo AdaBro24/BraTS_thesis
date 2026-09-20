@@ -1,31 +1,32 @@
-from pathlib import Path
 import json
+from pathlib import Path
 
 import numpy as np
 
-from brain_mri.data.nifti_loader import load_patient
-from brain_mri.data.preprocessing import (
-    crop_or_pad_slice,
-    validate_slice
-)
+from brain_mri.data.nifti_loader import MRI_MODALITIES, load_patient
+from brain_mri.data.preprocessing import crop_or_pad_slice, validate_slice
+
 
 def process_single_slice(
         images: np.ndarray,
         segmentation: np.ndarray,
+        brain: np.ndarray,
         z_idx: int,
         target_size: tuple[int,int] = (224,224)
     ) -> tuple[np.ndarray, np.ndarray] | None:
 
     image_slice = images[..., z_idx]
     mask_slice = segmentation[..., z_idx]
+    brain_slice = brain[..., z_idx]
 
     image_slice = crop_or_pad_slice(image_slice, target_size)
     mask_slice = crop_or_pad_slice(mask_slice, target_size)
+    brain_slice = crop_or_pad_slice(brain_slice, target_size)
 
-    if not validate_slice(image_slice, mask_slice):
+    if not validate_slice(image_slice, mask_slice, expected_modalities=len(MRI_MODALITIES)):
         return None
 
-    brain_mask = (image_slice != 0).any(axis=0).astype(np.float32)
+    brain_mask = brain_slice.astype(np.float32)
     image_slice = np.append(image_slice, [brain_mask], axis=0)
 
     return image_slice.astype(np.float32), mask_slice.astype(np.int16)
@@ -51,7 +52,7 @@ def extract_patient_slices(patient_dir: Path,
     patient_id = patient_dir.name
     boundaries = _load_z_boundaries(boundaries_path)
 
-    images, segmentation = load_patient(patient_dir)
+    images, segmentation, brain = load_patient(patient_dir)
     slice_indices = get_slice_indices(patient_id, boundaries)
 
     extracted_slices = []
@@ -60,6 +61,7 @@ def extract_patient_slices(patient_dir: Path,
         result = process_single_slice(
             images=images,
             segmentation=segmentation,
+            brain=brain,
             z_idx=z_idx,
             target_size=target_size
         )
