@@ -1,6 +1,6 @@
 from pathlib import Path
 
-import nibabel as nib
+import nibabel as nib # type: ignore
 import numpy as np
 
 from brain_mri.data.preprocessing import clip_percentiles, z_score_normalise
