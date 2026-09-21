@@ -150,6 +150,3 @@ Requirements: Python ≥ 3.10, `numpy`, `nibabel`, `scikit-learn`, `pyyaml`. The
 
 Done: patient loading, clipping + z-score normalisation, brain mask, crop/pad to 224×224, slice validation, z-boundary generation, patient-level splits, slice extraction.
 
-Next up: PyTorch `Dataset`/`DataLoader`, augmentations (train only), HDF5 export of extracted slices, unit tests, then model training and evaluation (Dice score per hierarchical region: WTW / TCW / ETW).
-
-See `roadmap.md` for the detailed checklist.
