@@ -53,7 +53,8 @@ def export_dataset_split(data_root: Path, splits: dict[str, list[str]], output_r
                 continue
 
             slices = extract_patient_slices(patient_dir, config=cfg)
-            saved = save_patients_to_pt(slices, split_dir)
+            patient_out_dir = split_dir / patient_id
+            saved = save_patients_to_pt(slices, patient_out_dir)
             total_slices += len(saved)
 
         stats[split_name] = total_slices
