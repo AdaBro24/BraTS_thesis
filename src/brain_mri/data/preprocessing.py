@@ -1,25 +1,20 @@
-######################################################
-"""
-I DONT KNOW YET IF I WANT TO PREPROCESS ALL DATA AND SAVE ON DRIVE USING 3 CHANNELS (h,w,d)
-OR DO IT IN REAL TIME HAVING (modalities, h, w, d) AFTER USING load_patient() function
-"""
-######################################################
+"""Preprocessing utilities for brain MRI and segmentation masks."""
 
 import numpy as np
+
 
 def z_score_normalise(volume: np.ndarray, epsilon: float = 1e-8) -> np.ndarray:
     mask = volume > 0
     normalised = np.zeros_like(volume, dtype=np.float32)
-    
+
     if not np.any(mask):
         return normalised
-    
+
     mean = volume[mask].mean()
     std = volume[mask].std()
 
-    normalised[mask] = (volume[mask] - mean)/(std + epsilon)
-    normalised[~mask] = normalised.min() - 1
-
+    normalised[mask] = (volume[mask] - mean) / (std + epsilon)
+    # Background outside the brain mask remains 0.0 (from np.zeros_like)
     return normalised
 
 # Not sure if i need that
@@ -42,7 +37,11 @@ def cut_volume(volume: np.ndarray, lower_idx: int, greater_idx: int) -> np.ndarr
 def get_slice(volume: np.ndarray, z_idx: int):
     return volume[..., z_idx]
 
-def crop_or_pad_slice(slice2d: np.ndarray, target_size=(224, 224)):
+def crop_or_pad_slice(
+    slice2d: np.ndarray,
+    target_size: tuple[int, int] = (224, 224),
+    pad_value: float = 0.0,
+) -> np.ndarray:
     target_h, target_w = target_size
     h, w = slice2d.shape[-2:]
 
@@ -74,10 +73,14 @@ def crop_or_pad_slice(slice2d: np.ndarray, target_size=(224, 224)):
         slice2d,
         pad_widths,
         mode="constant",
-        constant_values=0
+        constant_values=pad_value,
     )
 
-def validate_slice(slice2d: np.ndarray, mask_slice: np.ndarray, expected_modalities: int = 4) -> bool:
+def validate_slice(
+    slice2d: np.ndarray,
+    mask_slice: np.ndarray,
+    expected_modalities: int = 4,
+) -> bool:
     if slice2d.ndim != 3:
         return False
 
@@ -93,7 +96,4 @@ def validate_slice(slice2d: np.ndarray, mask_slice: np.ndarray, expected_modalit
     if not np.isfinite(slice2d).all():
         return False
 
-    if not np.isfinite(mask_slice).all():
-        return False
-
-    return True
+    return bool(np.isfinite(mask_slice).all())

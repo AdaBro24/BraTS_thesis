@@ -1,0 +1,16 @@
+target_size: [224, 224]
+
+clip_percentiles:
+  low: 1.0
+  high: 99.0
+
+modalities:
+  - T1
+  - T1CE
+  - T2
+  - FLAIR
+
+paths:
+  z_boundaries: "data/patients_z_boundaries.json"
+  splits: "data/data_splits.json"
+
