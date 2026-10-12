@@ -9,6 +9,7 @@ from brain_mri.data.slice_extraction import extract_patient_slices
 
 def save_patients_to_pt(slices: list[dict], output_dir: Path) -> list[Path]:
     """Saves list of patient's slices as .pt files."""
+    output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     saved_paths = []
 
@@ -22,15 +23,17 @@ def save_patients_to_pt(slices: list[dict], output_dir: Path) -> list[Path]:
 
         file_path = output_dir / f"{patient_id}_z{z_idx:03d}.pt"
 
-        torch.save(
-            {
-                "image": image_tensor,
-                "mask": mask_tensor,
-                "patient_id": patient_id,
-                "z_idx": z_idx,
-            },
-            file_path,
-        )
+        # Using Python's file handler prevents Google Drive FUSE driver C++ open errors
+        with open(file_path, "wb") as f:
+            torch.save(
+                {
+                    "image": image_tensor,
+                    "mask": mask_tensor,
+                    "patient_id": patient_id,
+                    "z_idx": z_idx,
+                },
+                f,
+            )
         saved_paths.append(file_path)
     return saved_paths
 
@@ -42,6 +45,8 @@ def export_dataset_split(
     config: DataConfig | None = None,
 ) -> dict[str, int]:
     """Exports slices to subsets (train, val, test) with progress bar and ETA."""
+    data_root = Path(data_root)
+    output_root = Path(output_root)
     cfg = config or load_data_config()
     stats = {}
 
