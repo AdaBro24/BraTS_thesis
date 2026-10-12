@@ -1,10 +1,3 @@
-######################################################
-"""
-I DONT KNOW YET IF I WANT TO PREPROCESS ALL DATA AND SAVE ON DRIVE USING 3 CHANNELS (h,w,d)
-OR DO IT IN REAL TIME HAVING (modalities, h, w, d) AFTER USING load_patient() function
-"""
-######################################################
-
 import numpy as np
 
 def z_score_normalise(volume: np.ndarray, epsilon: float = 1e-8) -> np.ndarray:
