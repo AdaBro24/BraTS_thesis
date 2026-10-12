@@ -3,6 +3,7 @@ numpy
 nibabel
 h5py
 PyYAML
+tqdm
 
 # --- Uczenie Maszynowe i Sieci Neuronowe ---
 torch

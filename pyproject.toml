@@ -12,6 +12,7 @@ dependencies = [
     "nibabel",
     "scikit-learn",
     "pyyaml",
+    "tqdm",
 ]
  
 [tool.setuptools.packages.find]
