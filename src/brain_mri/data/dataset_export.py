@@ -5,7 +5,7 @@ import torch
 from tqdm import tqdm
 
 from brain_mri.config import DataConfig, load_data_config
-from brain_mri.data.slice_extraction import extract_patient_slices
+from brain_mri.data.slice_extraction import _load_z_boundaries, extract_patient_slices
 
 
 def save_patients_to_pt(slices: list[dict], output_dir: Path) -> list[Path]:
@@ -44,18 +44,33 @@ def export_dataset_split(
     splits: dict[str, list[str]],
     output_root: Path = Path("data/processed"),
     config: DataConfig | None = None,
+    overwrite: bool = False,
 ) -> dict[str, int]:
-    """Exports slices to subsets (train, val, test) with progress bar and ETA."""
+    """Exports slices to subsets (train, val, test) with progress bar and ETA.
+
+    Supports automatic resumption: if a patient directory already contains all expected
+    slices, extraction is skipped automatically. Partial/corrupted folders from previous
+    aborted runs are cleanly cleaned up and re-exported.
+    """
     data_root = Path(data_root)
     output_root = Path(output_root)
     cfg = config or load_data_config()
     stats = {}
+
+    # Load boundaries once for fast resume validation
+    boundaries = None
+    if cfg and cfg.paths.z_boundaries:
+        try:
+            boundaries = _load_z_boundaries(Path(cfg.paths.z_boundaries))
+        except Exception:
+            boundaries = None
 
     for split_name, patient_ids in splits.items():
         split_dir = output_root / split_name
         split_dir.mkdir(parents=True, exist_ok=True)
         total_slices = 0
         total_patients = len(patient_ids)
+        skipped_patients = 0
 
         print(f"\n[INFO] Starting export for split '{split_name}': {total_patients} patients...", flush=True)
 
@@ -73,17 +88,52 @@ def export_dataset_split(
                 pbar.write(f"Warning: Missing patient directory {patient_dir}")
                 continue
 
-            slices = extract_patient_slices(patient_dir, config=cfg)
             patient_out_dir = split_dir / patient_id
+
+            # Resume check: skip already completed patients
+            if not overwrite and patient_out_dir.exists():
+                existing_pts = list(patient_out_dir.glob("*.pt"))
+                expected_count = None
+                if boundaries and patient_id in boundaries:
+                    first_z, last_z = boundaries[patient_id]
+                    expected_count = last_z - first_z + 1
+
+                if expected_count is not None and len(existing_pts) == expected_count:
+                    total_slices += len(existing_pts)
+                    skipped_patients += 1
+                    pbar.set_postfix(slices=total_slices, skipped=skipped_patients)
+                    continue
+                elif expected_count is None and len(existing_pts) > 0:
+                    total_slices += len(existing_pts)
+                    skipped_patients += 1
+                    pbar.set_postfix(slices=total_slices, skipped=skipped_patients)
+                    continue
+                else:
+                    # Incomplete export from interrupted run; clean up before re-extracting
+                    for f in existing_pts:
+                        try:
+                            f.unlink()
+                        except OSError:
+                            pass
+
+            slices = extract_patient_slices(patient_dir, config=cfg)
             saved = save_patients_to_pt(slices, patient_out_dir)
             total_slices += len(saved)
-            pbar.set_postfix(slices=total_slices)
+            pbar.set_postfix(slices=total_slices, skipped=skipped_patients)
 
             # Periodic log every 50 patients to ensure progress is visible even if \r is buffered
             if idx % 50 == 0 or idx == total_patients:
-                print(f" -> [{split_name}] Completed {idx}/{total_patients} patients ({total_slices} total slices saved)", flush=True)
+                print(
+                    f" -> [{split_name}] Completed {idx}/{total_patients} patients "
+                    f"({total_slices} slices saved, {skipped_patients} skipped)",
+                    flush=True,
+                )
 
         stats[split_name] = total_slices
-        print(f"[INFO] Finished split '{split_name}': {total_slices} slices saved.", flush=True)
+        print(
+            f"[INFO] Finished split '{split_name}': {total_slices} slices total "
+            f"({skipped_patients} previously completed and skipped).",
+            flush=True,
+        )
 
     return stats
