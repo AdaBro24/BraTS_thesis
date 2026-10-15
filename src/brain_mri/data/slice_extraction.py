@@ -42,7 +42,11 @@ def get_slice_indices(patient_id: str, boundaries: dict[str, list[int]]) -> rang
     return range(first_z, last_z + 1)
 
 
-def _load_z_boundaries(json_file: Path) -> dict[str, list[int]]:
+import functools
+
+
+@functools.lru_cache(maxsize=4)
+def _load_z_boundaries(json_file: Path | str) -> dict[str, list[int]]:
     with open(json_file, "r", encoding="utf-8") as file:
         return json.load(file)
 

@@ -1,7 +1,8 @@
+import sys
 from pathlib import Path
 
 import torch
-from tqdm.auto import tqdm
+from tqdm import tqdm
 
 from brain_mri.config import DataConfig, load_data_config
 from brain_mri.data.slice_extraction import extract_patient_slices
@@ -54,9 +55,19 @@ def export_dataset_split(
         split_dir = output_root / split_name
         split_dir.mkdir(parents=True, exist_ok=True)
         total_slices = 0
+        total_patients = len(patient_ids)
 
-        pbar = tqdm(patient_ids, desc=f"Exporting {split_name}", unit="patient")
-        for patient_id in pbar:
+        print(f"\n[INFO] Starting export for split '{split_name}': {total_patients} patients...", flush=True)
+
+        pbar = tqdm(
+            enumerate(patient_ids, 1),
+            total=total_patients,
+            desc=f"Exporting {split_name}",
+            unit="patient",
+            file=sys.stdout,
+            dynamic_ncols=True,
+        )
+        for idx, patient_id in pbar:
             patient_dir = data_root / patient_id
             if not patient_dir.exists():
                 pbar.write(f"Warning: Missing patient directory {patient_dir}")
@@ -68,6 +79,11 @@ def export_dataset_split(
             total_slices += len(saved)
             pbar.set_postfix(slices=total_slices)
 
+            # Periodic log every 50 patients to ensure progress is visible even if \r is buffered
+            if idx % 50 == 0 or idx == total_patients:
+                print(f" -> [{split_name}] Completed {idx}/{total_patients} patients ({total_slices} total slices saved)", flush=True)
+
         stats[split_name] = total_slices
+        print(f"[INFO] Finished split '{split_name}': {total_slices} slices saved.", flush=True)
 
     return stats
