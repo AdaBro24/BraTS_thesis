@@ -61,7 +61,7 @@ class Trainer:
         """Runs validation over the validation dataset without tracking gradients."""
         self.model.eval()
         running_loss = 0.0
-        total_dice_scores : dict[str, float] = {"NCR": 0.0, "ED": 0.0, "ET": 0.0, "mean": 0.0}
+        total_dice_scores: dict[str, float] = {}
 
         pbar = tqdm(self.val_loader, desc="Validation", leave=False)
         for images, masks in pbar:
@@ -73,8 +73,8 @@ class Trainer:
             running_loss += loss.item()
 
             batch_dice = compute_dice_score(outputs, masks)
-            for key in total_dice_scores:
-                total_dice_scores[key] += batch_dice[key]
+            for key, val in batch_dice.items():
+                total_dice_scores[key] = total_dice_scores.get(key, 0.0) + val
 
         val_loss = running_loss / len(self.val_loader)
 
@@ -94,12 +94,13 @@ class Trainer:
             self.history["val_loss"].append(val_loss)
             self.history["val_mean_dice"].append(val_dice["mean"])
 
+            dice_details = ", ".join(f"{k}: {v:.2f}" for k, v in val_dice.items() if k != "mean")
             print(
                 f"Epoch [{epoch:02d}/{epochs:02d}] | "
                 f"Train Loss: {train_loss:.4f} | "
                 f"Val Loss: {val_loss:.4f} | "
                 f"Val Mean Dice: {val_dice['mean']:.4f} "
-                f"(NCR: {val_dice['NCR']:.2f}, ED: {val_dice['ED']:.2f}, ET: {val_dice['ET']:.2f})"
+                f"({dice_details})"
             )
 
             if val_dice["mean"] > self.best_val_dice:
