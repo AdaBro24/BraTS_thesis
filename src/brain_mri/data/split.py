@@ -3,13 +3,8 @@ from pathlib import Path
 
 from sklearn.model_selection import train_test_split
 
-# Default paths for Colab environment (can be overridden in function calls)
-ZIP_DIR = Path("/content/drive/MyDrive/engineering_thesis/brats")
-GLI_ZIP = ZIP_DIR / "BraTS2024-BraTS-GLI-TrainingData.zip"
-MEN_ZIP = ZIP_DIR / "BraTS2024-MEN-RT-TrainingData.zip"
-DATA_ROOT = ZIP_DIR / "unpacked"
-GLI_ROOT = DATA_ROOT / "BraTS-GLI" / "training_data1_v2"
-DEFAULT_SPLIT_JSON = ZIP_DIR / "data_splits.json"
+# Default local paths (can be overridden in function calls)
+DEFAULT_SPLIT_JSON = Path("data/data_splits.json")
 
 
 def split_patients(
@@ -32,11 +27,10 @@ def split_patients(
 
 
 def get_or_create_splits(
-    folder_path: Path | str = GLI_ROOT,
+    folder_path: Path | str | None = None,
     json_path: Path | str = DEFAULT_SPLIT_JSON,
     seed: int = 42,
 ) -> dict[str, list[str]]:
-    folder_path = Path(folder_path)
     json_path = Path(json_path)
     splitted: dict[str, list[str]] = {}
 
@@ -47,10 +41,13 @@ def get_or_create_splits(
             splitted["validate"] = data["validate"]
             splitted["test"] = data["test"]
     else:
+        if folder_path is None:
+            raise ValueError("folder_path must be provided when json_path does not exist.")
+        folder_path = Path(folder_path)
         if not folder_path.exists():
             raise FileNotFoundError(f"Folder path for patient data does not exist: {folder_path}")
 
-        patient_dirs = [p for p in folder_path.iterdir() if p.is_dir()]
+        patient_dirs = sorted([p for p in folder_path.iterdir() if p.is_dir()])
         train_patients, val_patients, test_patients = split_patients(patient_dirs, seed=seed)
         splitted["train"] = [p.name for p in train_patients]
         splitted["validate"] = [p.name for p in val_patients]
