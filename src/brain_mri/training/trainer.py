@@ -15,7 +15,7 @@ class Trainer:
             train_loader: DataLoader,
             val_loader: DataLoader,
             criterion: nn.Module,
-            optimizer: torch.optimizer.Optimizer,
+            optimizer: torch.optim.Optimizer,
             device: torch.device | str = 'cuda' if torch.cuda.is_available() else 'cpu',
             checkpoint_dir: Path | str = 'checkpoints'
             ):
@@ -29,7 +29,7 @@ class Trainer:
                 self.checkpoint_dir = Path(checkpoint_dir)
                 self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
-                self.best_val_score = 0.0
+                self.best_val_dice = 0.0
                 self.history: dict[str, list[float]] = {
                     "train_loss": [],
                     "val_loss": [],
@@ -47,7 +47,7 @@ class Trainer:
             self.optimizer.zero_grad()
             outputs = self.model(images)
             loss = self.criterion(outputs, masks)
-            loss.backwards()
+            loss.backward()
             self.optimizer.step()
             running_loss += loss.item()
             pbar.set_postfix(loss=f"{loss.item():.4f}")
@@ -78,7 +78,7 @@ class Trainer:
 
         val_loss = running_loss / len(self.val_loader)
 
-        avg_dice = {k: round(self.val_loader, 4) for k, v in total_dice_scores.items()}
+        avg_dice = {k: round(v / len(self.val_loader), 4) for k, v in total_dice_scores.items()}
             
         return val_loss, avg_dice
 
@@ -86,7 +86,7 @@ class Trainer:
         """Runs the full training loop across the specified number of epochs."""
         print(f"Starting training on device: {self.device} for {epochs} epochs\n")
 
-        for epoch in epochs:
+        for epoch in range(1, epochs + 1):
             train_loss = self.train_epoch()
             val_loss, val_dice = self.validate_epoch()
 

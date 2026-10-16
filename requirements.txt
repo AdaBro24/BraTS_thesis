@@ -1,17 +1,17 @@
-# --- Podstawowe obliczenia i dane ---
+# --- Core data and computation ---
 numpy
 nibabel
 h5py
 PyYAML
 tqdm
 
-# --- Uczenie Maszynowe i Sieci Neuronowe ---
+# --- Machine Learning and Deep Learning ---
 torch
 scikit-learn
 
-# --- Wizualizacja ---
+# --- Visualization ---
 matplotlib
 
-# --- Narzędzia deweloperskie (Czysty kod) ---
+# --- Development tools (code quality) ---
 black
 ruff
