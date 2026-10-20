@@ -3,8 +3,7 @@ roadmap.md
 __pycache__/
 *.pyc
 *.egg-info/
-# Model checkpoints and training outputs (large)
-checkpoints/
+# Model weights (large; PNG plots in checkpoints/ stay tracked)
 *.pt
 *.pth
 *.ckpt
