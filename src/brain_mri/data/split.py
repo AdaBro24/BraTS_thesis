@@ -7,23 +7,35 @@ from sklearn.model_selection import train_test_split
 DEFAULT_SPLIT_JSON = Path("data/data_splits.json")
 
 
+def subject_id(scan_name: str) -> str:
+    """BraTS-GLI-00463-101 -> BraTS-GLI-00463 (one subject can have several timepoint scans)."""
+    return scan_name.rsplit("-", 1)[0]
+
+
 def split_patients(
     patient_dirs: list[Path],
     seed: int = 42,
 ) -> tuple[list[Path], list[Path], list[Path]]:
-    train_patients, remaining_patients = train_test_split(
-        patient_dirs,
+    """Splits scans 70/15/15 by subject, so all timepoints of a subject land in the same split."""
+    subjects = sorted({subject_id(p.name) for p in patient_dirs})
+
+    train_subjects, remaining_subjects = train_test_split(
+        subjects,
         train_size=0.7,
         random_state=seed,
     )
 
-    val_patients, test_patients = train_test_split(
-        remaining_patients,
+    val_subjects, test_subjects = train_test_split(
+        remaining_subjects,
         train_size=0.5,
         random_state=seed,
     )
 
-    return train_patients, val_patients, test_patients
+    def scans_of(split_subjects: list[str]) -> list[Path]:
+        split_subjects = set(split_subjects)
+        return [p for p in patient_dirs if subject_id(p.name) in split_subjects]
+
+    return scans_of(train_subjects), scans_of(val_subjects), scans_of(test_subjects)
 
 
 def get_or_create_splits(

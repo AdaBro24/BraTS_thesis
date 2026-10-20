@@ -33,10 +33,11 @@ def create_dataloader(
         split_dir: Path | str,
         batch_size: int = 16,
         shuffle: bool = True,
-        num_workers: int = 2,
-        pin_memory: bool = True
+        num_workers: int = 8,
+        pin_memory: bool = True,
+        prefetch_factor: int = 4
         ) -> DataLoader:
-    
+
     """Creates a PyTorch DataLoader for given dataset split"""
     dataset = BratsDataset(split_dir)
 
@@ -45,5 +46,7 @@ def create_dataloader(
         batch_size=batch_size,
         shuffle=shuffle,
         num_workers=num_workers,
-        pin_memory=pin_memory
+        pin_memory=pin_memory,
+        persistent_workers=num_workers > 0,
+        prefetch_factor=prefetch_factor if num_workers > 0 else None
     )

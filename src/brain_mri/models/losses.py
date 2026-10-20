@@ -5,7 +5,7 @@ import torch.nn.functional as F
 class DiceLoss(nn.Module):
     """Multi-class Soft Dice Loss for training segmentation models."""
 
-    def __init__(self, smooth: float = 1e-6, include_background: bool = False):
+    def __init__(self, smooth: float = 1.0, include_background: bool = False):
         super().__init__()
         self.smooth = smooth
         self.include_background = include_background
@@ -25,7 +25,9 @@ class DiceLoss(nn.Module):
             probs = probs[:, 1:]
             target_one_hot = target_one_hot[:, 1:]
 
-        dims = (2, 3)
+        # Batch Dice: sum over the whole batch, so a class absent from one slice
+        # does not yield a ~1.0 loss term for that slice
+        dims = (0, 2, 3)
         intersection = torch.sum(probs * target_one_hot, dims)
         cardinality = torch.sum(probs + target_one_hot, dims)
 
